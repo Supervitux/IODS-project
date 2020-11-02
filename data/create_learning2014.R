@@ -34,3 +34,6 @@ str(X_2)
 # 166 obs of 7 variables left
 
 # 4.
+write.csv(X_2, file = "learning2014.csv")
+read_in <- read.csv("learning2014.csv")
+str(read_in)
