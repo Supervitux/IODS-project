@@ -41,3 +41,37 @@ my_model2 <- lm(Points ~ Attitude + stra + Age , data = learning2014)
 summary(my_model2)
 
 ```
+The summary shows the results of two statistical tests. First of all the **t-value** tell us about how far our estimated parameter is from a hypothesized 0. This the highest for "stra". The **p-value** (Pr) tells us about the probability of observing a value at least as extreme as our coefficient and usually should be below a 0.05 threshold.
+The summary of the model shows that only "Attitude" has a low enough p-value to reject the null hypothesis and therefore has a significant relationship with our target "Points".
+Therefore we drop the features "stra" and "Age" and rerun the model: 
+```{r}
+my_model2 <- lm(Points ~ Attitude, data = learning2014)
+summary(my_model2)
+
+```
+Now our model is statistically significant.
+
+### 4. Interpretation of the model
+The intercept tells us that someone with 0 attitude will have 11.6 points. From there for each "Attitude" increment the "Points" will rise by 0.35. Someone with the maximum of 50 in attitude will have a predicted point score of 17 + 11 = 28. We have a linear relationship here. The multiple r-squared is always between 0 and 1 and the higher the more variation in the response variable is explained by the model. The same is true for the adjusted r-squared just that it takes into account the number of independent variables. Our model is therefore not well suited to explain this variation as the value is only 0.19.
+
+### 5. Plot Residuals
+
+```{r}
+plot(my_model2, which = 1)
+```
+
+Ideally the residual would be as close to 0 as possible. We have a quite big spreading, which is also reflected by our poor r-squared.
+
+The normal Q-Q plot plots the quantiles of two different probability distributions against each other. Ideally all the values are on the diagonal:
+```{r}
+plot(my_model2, which = 2)
+```
+
+We can see that for the outer quantiles the values diverge from the quantiles.
+
+_Leverage_ describes how far a covariate is from other covariates, respectively for the present assumed linear regression it measures how sensitive a predicted value is to a change of the corresponding true value:
+```{r}
+plot(my_model2, which = 5)
+```
+
+The points are more or less evenly spread.
