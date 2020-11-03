@@ -1,4 +1,4 @@
-# Insert chapter 2 title here
+# Regression and model validation
 
 *Describe the work you have done this week and summarize your learning.*
 
@@ -6,8 +6,38 @@
 - Assume the reader has an introductory course level understanding of writing and reading R code as well as statistical methods.
 - Assume the reader has no previous knowledge of your data or the more advanced methods you are using.
 
+### 1. Read in and describe the data
 ```{r}
-date()
+learning2014 <- read.csv("learning2014.csv")
+str(learning2014)
+dim(learning2014)
 ```
+The data consists of 166 observations for 7 variables (the 8th variable is merely an index here). The data has been collected over the course _Introduction to Social Statistics_ in 2014. Non-selfexplanatory columns are:
 
-Here we go again...
+* "deep": Deep learning evaluation 
+* "stra": Strategic learning evaluation
+* "surf"; Surface learning evaluation
+
+More details available at http://www.helsinki.fi/~kvehkala/JYTmooc/JYTOPKYS3-meta.txt
+
+### 2. Graphical overview of the data
+```{r}
+library(GGally)
+library(ggplot2)
+# create a more advanced plot matrix with ggpairs()
+p <- ggpairs(learning2014, mapping = aes(col = gender, alpha = 0.3), lower = list(combo = wrap("facethist", bins = 20)))
+# draw the plot
+p
+```
+```{r}
+summary(learning2014)
+```
+Blue represents data where gender is "male", red where gender is "female". The table overview shows that the data consists to only one third of data with gender being "male", The graphical overview shows that higher points correlate with a better attitude.
+
+### 3. Regression model
+
+```{r}
+my_model2 <- lm(Points ~ Attitude + stra + Age , data = learning2014)
+summary(my_model2)
+
+```
