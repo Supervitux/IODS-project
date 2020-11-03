@@ -1,10 +1,5 @@
 # Regression and model validation
 
-*Describe the work you have done this week and summarize your learning.*
-
-- Describe your work and results clearly. 
-- Assume the reader has an introductory course level understanding of writing and reading R code as well as statistical methods.
-- Assume the reader has no previous knowledge of your data or the more advanced methods you are using.
 
 ### 1. Read in and describe the data
 ```{r}
@@ -32,7 +27,7 @@ p
 ```{r}
 summary(learning2014)
 ```
-Blue represents data where gender is "male", red where gender is "female". The table overview shows that the data consists to only one third of data with gender being "male", The graphical overview shows that higher points correlate with a better attitude.
+Blue represents data where gender is "male", red where gender is "female". The table overview shows that the data consists to only one third of data with gender being "male", The graphical overview shows that higher points correlate with a better attitude. Otherwise barely any correlation can be stated visually.
 
 ### 3. Regression model
 
