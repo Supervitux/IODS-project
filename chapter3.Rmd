@@ -1,0 +1,40 @@
+# Logistic Regression
+
+
+### 2. Read in and describe the data
+```{r}
+alc <- read.csv("data/alc.csv")
+colnames(alc)
+
+```
+The data contains information about student achievements in secondary eduction of two Portugese schools. It includes students grades, demographic, social and school related features, which were collected via questionnaries. More information at: https://archive.ics.uci.edu/ml/datasets/Student+Performance
+
+### 3. Hypotheses for relationships of alcohol consumption to chosen variables
+
+Personally I would except students with high alcohol consumption (**high_use**) to have worse grades (**G3**), more absences (**absences**), worse health (**health**) and more class failures (**failures**).
+
+### 4. Explore Hypotheses
+
+```{r}
+table(high_use = alc$high_use, grade = alc$G3)
+table(high_use = alc$high_use, absences = alc$absences)
+table(high_use = alc$high_use, health = alc$health)
+table(high_use = alc$high_use, failures = alc$failures)
+
+```
+The numerical observation confirms my hypotheses, however, a graphical exploration should make it simpler to draw an actual comparison:
+
+```{r}
+library(ggplot2)
+g1 <- ggplot(alc, aes(x = high_use, y = G3, col = sex))
+g1 + geom_boxplot() + ylab("grade")   + ggtitle("Student grades by alcohol consumption and sex")
+g2 <- ggplot(alc, aes(x = high_use, y = absences, col = sex))
+g2 + geom_boxplot() + ylab("absences")   + ggtitle("Student absences by alcohol consumption and sex")
+g3 <- ggplot(alc, aes(x = high_use, y = health, col = sex))
+g3 + geom_boxplot() + ylab("health")   + ggtitle("Student health by alcohol consumption and sex")
+g4 <- ggplot(alc, aes(x = high_use, y = failures, col = sex))
+g4 + geom_boxplot() + ylab("failures")   + ggtitle("Student failures by alcohol consumption and sex")
+```
+The grades for students with high alcohol consumption seem to be generally lower. Interestingly the mean for females with high alcohol consumption is as high as the mean for females without, it seems that there are some very well performing females with high alcohol consumption dragging the mean up. We observe the same looking at absences. Male health seems to be not affected by alcohol usage, while female health generally is worse for high consumption, the mean is actually lower indicating that some females without high alcohol consumption show exceptionally bad health. Eventually alcohol consumption seems to basically noy correlate with class failure.
+
+### 5. Logistic Regression
