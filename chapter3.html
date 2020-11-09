@@ -587,7 +587,7 @@ table(high_use = alc$high_use, prediction = alc$prediction)</code></pre>
 <pre class="r"><code>library(boot)
 cv &lt;- cv.glm(data = alc, cost = loss_func, glmfit = m, K = 10)
 cv$delta[1]</code></pre>
-<pre><code>## [1] 0.2879581</code></pre>
+<pre><code>## [1] 0.2905759</code></pre>
 <p>Crossvalidation seems to make the prediction worse in the present case.</p>
 </div>
 </div>

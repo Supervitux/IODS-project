@@ -1,4 +1,4 @@
-# Logistic Regression
+# 3. Logistic Regression
 
 
 ### 2. Read in and describe the data

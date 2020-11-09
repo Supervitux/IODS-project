@@ -1,9 +1,9 @@
-# Regression and model validation
+#  2. Regression and model validation
 
 
 ### 1. Read in and describe the data
 ```{r}
-learning2014 <- read.csv("learning2014.csv")
+learning2014 <- read.csv("data/learning2014.csv")
 str(learning2014)
 dim(learning2014)
 ```
