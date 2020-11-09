@@ -14,7 +14,7 @@ The data contains information about student achievements in secondary eduction o
 Personally I would except students with high alcohol consumption (**high_use**) to have worse grades (**G3**), more absences (**absences**), worse health (**health**) and more class failures (**failures**).
 
 ### 4. Explore Hypotheses
-
+Let's explore these hypotheses, first numerically:
 ```{r}
 table(high_use = alc$high_use, grade = alc$G3)
 table(high_use = alc$high_use, absences = alc$absences)
@@ -38,3 +38,64 @@ g4 + geom_boxplot() + ylab("failures")   + ggtitle("Student failures by alcohol 
 The grades for students with high alcohol consumption seem to be generally lower. Interestingly the mean for females with high alcohol consumption is as high as the mean for females without, it seems that there are some very well performing females with high alcohol consumption dragging the mean up. We observe the same looking at absences. Male health seems to be not affected by alcohol usage, while female health generally is worse for high consumption, the mean is actually lower indicating that some females without high alcohol consumption show exceptionally bad health. Eventually alcohol consumption seems to basically noy correlate with class failure.
 
 ### 5. Logistic Regression
+
+```{r}
+m <- glm(high_use ~ G3 + absences + health + failures, data = alc, family = "binomial")
+summary(m)
+```
+The logistic regression model contradicts my earlier conclusions and shows that **health** and **grades** are not statistically significant while **failures** is. Consequently I drop **health** and **grades** from the model.
+```{r}
+m <- glm(high_use ~ failures + absences, data = alc, family = "binomial")
+summary(m)
+coef(m)
+```
+Let's turn the coefficients into odds ratios with confidence intervals:
+```
+library(dplyr)
+# compute odds ratios (OR)
+OR <- coef(m) %>% exp
+
+# compute confidence intervals (CI)
+CI <- confint(m) %>% exp
+
+# print out the odds ratios with their confidence intervals
+cbind(OR, CI)
+```
+The odd ratios strongly confirm the relationship of failures: An individual with high alcohol consumption is 1.6 times more likely to have a failure. The impact of **absences** is less strongly confirmed and only slight
+
+### 6. Predictive Power
+
+Let's make predictions with our two variables:
+```{r}
+library(dplyr)
+# predict() the probability of high_use
+probabilities <- predict(m, type = "response")
+
+# add the predicted probabilities to 'alc'
+alc <- mutate(alc, probability = probabilities)
+
+# use the probabilities to make a prediction of high_use
+alc <- mutate(alc, prediction = probability > 0.5)
+
+# tabulate the target variable versus the predictions
+table(high_use = alc$high_use, prediction = alc$prediction)
+
+```
+The cross-tabulation shows that our model has little false negatives, however, produces a high number of false positives. The training error is 109/382 = **0.285**. This better than simple guessing, which would result in an error of 0.5.
+
+### 7. Cross-validation
+
+For crossvalidation we need to define a const function:
+```{r}
+loss_func <- function(class, prob) {
+  n_wrong <- abs(class - prob) > 0.5
+  mean(n_wrong)
+}
+```
+next we perform 10 fold crossvalidation:
+```{r}
+library(boot)
+cv <- cv.glm(data = alc, cost = loss_func, glmfit = m, K = 10)
+cv$delta[1]
+```
+Crossvalidation seems to make the prediction worse in the present case.

@@ -435,6 +435,7 @@ colnames(alc)</code></pre>
 </div>
 <div id="explore-hypotheses" class="section level3">
 <h3>4. Explore Hypotheses</h3>
+<p>Let’s explore these hypotheses, first numerically:</p>
 <pre class="r"><code>table(high_use = alc$high_use, grade = alc$G3)</code></pre>
 <pre><code>##         grade
 ## high_use  0  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18
@@ -476,6 +477,118 @@ g4 + geom_boxplot() + ylab(&quot;failures&quot;)   + ggtitle(&quot;Student failu
 </div>
 <div id="logistic-regression-1" class="section level3">
 <h3>5. Logistic Regression</h3>
+<pre class="r"><code>m &lt;- glm(high_use ~ G3 + absences + health + failures, data = alc, family = &quot;binomial&quot;)
+summary(m)</code></pre>
+<pre><code>## 
+## Call:
+## glm(formula = high_use ~ G3 + absences + health + failures, family = &quot;binomial&quot;, 
+##     data = alc)
+## 
+## Deviance Residuals: 
+##     Min       1Q   Median       3Q      Max  
+## -2.3178  -0.7943  -0.7015   1.1814   1.9006  
+## 
+## Coefficients:
+##             Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept) -1.13164    0.58665  -1.929 0.053731 .  
+## G3          -0.04286    0.03791  -1.131 0.258225    
+## absences     0.08458    0.02283   3.705 0.000212 ***
+## health       0.07387    0.08602   0.859 0.390474    
+## failures     0.39341    0.19912   1.976 0.048184 *  
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 465.68  on 381  degrees of freedom
+## Residual deviance: 437.96  on 377  degrees of freedom
+## AIC: 447.96
+## 
+## Number of Fisher Scoring iterations: 4</code></pre>
+<p>The logistic regression model contradicts my earlier conclusions and shows that <strong>health</strong> and <strong>grades</strong> are not statistically significant while <strong>failures</strong> is. Consequently I drop <strong>health</strong> and <strong>grades</strong> from the model.</p>
+<pre class="r"><code>m &lt;- glm(high_use ~ failures + absences, data = alc, family = &quot;binomial&quot;)
+summary(m)</code></pre>
+<pre><code>## 
+## Call:
+## glm(formula = high_use ~ failures + absences, family = &quot;binomial&quot;, 
+##     data = alc)
+## 
+## Deviance Residuals: 
+##     Min       1Q   Median       3Q      Max  
+## -2.2680  -0.8019  -0.6967   1.2522   1.7906  
+## 
+## Coefficients:
+##             Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept) -1.37829    0.16479  -8.364  &lt; 2e-16 ***
+## failures     0.49972    0.18456   2.708 0.006776 ** 
+## absences     0.08602    0.02287   3.762 0.000169 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 465.68  on 381  degrees of freedom
+## Residual deviance: 440.14  on 379  degrees of freedom
+## AIC: 446.14
+## 
+## Number of Fisher Scoring iterations: 4</code></pre>
+<pre class="r"><code>coef(m)</code></pre>
+<pre><code>## (Intercept)    failures    absences 
+## -1.37828639  0.49971697  0.08601774</code></pre>
+<p>Let’s turn the coefficients into odds ratios with confidence intervals:</p>
+<pre><code>library(dplyr)
+# compute odds ratios (OR)
+OR &lt;- coef(m) %&gt;% exp
+
+# compute confidence intervals (CI)
+CI &lt;- confint(m) %&gt;% exp
+
+# print out the odds ratios with their confidence intervals
+cbind(OR, CI)</code></pre>
+<p>The odd ratios strongly confirm the relationship of failures: An individual with high alcohol consumption is 1.6 times more likely to have a failure. The impact of <strong>absences</strong> is less strongly confirmed and only slight</p>
+</div>
+<div id="predictive-power" class="section level3">
+<h3>6. Predictive Power</h3>
+<p>Let’s make predictions with our two variables:</p>
+<pre class="r"><code>library(dplyr)</code></pre>
+<pre><code>## 
+## Attaching package: &#39;dplyr&#39;</code></pre>
+<pre><code>## The following objects are masked from &#39;package:stats&#39;:
+## 
+##     filter, lag</code></pre>
+<pre><code>## The following objects are masked from &#39;package:base&#39;:
+## 
+##     intersect, setdiff, setequal, union</code></pre>
+<pre class="r"><code># predict() the probability of high_use
+probabilities &lt;- predict(m, type = &quot;response&quot;)
+
+# add the predicted probabilities to &#39;alc&#39;
+alc &lt;- mutate(alc, probability = probabilities)
+
+# use the probabilities to make a prediction of high_use
+alc &lt;- mutate(alc, prediction = probability &gt; 0.5)
+
+# tabulate the target variable versus the predictions
+table(high_use = alc$high_use, prediction = alc$prediction)</code></pre>
+<pre><code>##         prediction
+## high_use FALSE TRUE
+##    FALSE   258   10
+##    TRUE     99   15</code></pre>
+<p>The cross-tabulation shows that our model has little false negatives, however, produces a high number of false positives. The training error is 109/382 = <strong>0.285</strong>. This better than simple guessing, which would result in an error of 0.5.</p>
+</div>
+<div id="cross-validation" class="section level3">
+<h3>7. Cross-validation</h3>
+<p>For crossvalidation we need to define a const function:</p>
+<pre class="r"><code>loss_func &lt;- function(class, prob) {
+  n_wrong &lt;- abs(class - prob) &gt; 0.5
+  mean(n_wrong)
+}</code></pre>
+<p>next we perform 10 fold crossvalidation:</p>
+<pre class="r"><code>library(boot)
+cv &lt;- cv.glm(data = alc, cost = loss_func, glmfit = m, K = 10)
+cv$delta[1]</code></pre>
+<pre><code>## [1] 0.2879581</code></pre>
+<p>Crossvalidation seems to make the prediction worse in the present case.</p>
 </div>
 </div>
 
