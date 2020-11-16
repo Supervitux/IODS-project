@@ -1,0 +1,76 @@
+# 4. Clustering and Classification
+
+
+### 2. Load and describe the data
+```{r}
+library(MASS)
+data("Boston")
+str(Boston)
+```
+The data contains information about housing values in suburbs of Boston. It contains information regarding crime rates, proportions of residental land/non-retail and various other variables influencing housing values, detailed information here:  https://stat.ethz.ch/R-manual/R-devel/library/MASS/html/Boston.html
+There are **506** observables of **14** variables.
+
+### 3. Graphical overview
+
+For obtaining an graphical overview of the data it is here useful to plot a **Correlation matrix** additional to the summary.
+```{r}
+library(dplyr)
+library(tidyverse)
+library(corrplot)
+summary(Boston)
+# calculate the correlation matrix and round it
+cor_matrix<-cor(Boston) %>% round(digits = 2)
+
+# visualize the correlation matrix
+corrplot(cor_matrix, method="circle", type="upper", cl.pos = "b", tl.pos = "d", tl.cex = 0.6)
+
+```
+*crim*, that is crime rates, is the only variable the spans over several order of magnitudes. Otherwise most of the data is in a range of tens and hundreds. There is lots of correlation within the data. Only exception is *chas*, (Charles River dummy variable (= 1 if tract bounds river; 0 otherwise)). Also *black* (measure for the proprtion of black population) shows rather small correlationss. We have various clear correlations that feel intuitively right, such as *indus* (industry proportion) with *nox* (nitrogen oxide concentration) or a negative correlation of *lstat* (lower status of populatrion in %) to *medv* (median value of homes).
+
+### 4. Standardize Data
+
+We will standardize the data: 
+```{r}
+# center and standardize variables
+boston_scaled <- scale(Boston)
+
+# summaries of the scaled variables
+summary(boston_scaled)
+
+# change the object to data frame
+boston_scaled <- as.data.frame(boston_scaled)
+
+```
+Standardizing set all data means to zero.
+Now we turn *crim* into a categorical variable, based on its quantiles. Finally we will put 80% of the data into a train set and the rest to a testset.
+```{r}
+# create a quantile vector of crim and print it
+bins <- quantile(boston_scaled$crim)
+
+# create a categorical variable 'crime'
+crime <- cut(boston_scaled$crim, breaks = bins, include.lowest = TRUE, label = c("low","med_low","med_high","high"))
+
+# remove original crim from the dataset
+boston_scaled <- dplyr::select(boston_scaled, -crim)
+
+# add the new categorical value to scaled data
+boston_scaled <- data.frame(boston_scaled, crime)
+
+# number of rows in the Boston dataset 
+n <- nrow(Boston)
+
+# choose randomly 80% of the rows
+ind <- sample(n,  size = n * 0.8)
+
+# create train set
+train <- boston_scaled[ind,]
+
+# create test set 
+test <- boston_scaled[-ind,]
+
+```
+
+### 5. Standardize Data
+
+We will standardize the data:
+
