@@ -117,4 +117,49 @@ lda.pred <- predict(lda.fit, newdata = test)
 table(correct = correct_classes, predicted = lda.pred$class)
 
 ```
-We see that high and medium high was all correct predicted with one exception. However, only roughly a third of medium low was correctly predicted, where one other thrid was misspredicted as low and one as medium high, this is what we expected from the figure above. Also One third of "low" was misspredicted as medium low.
+We see that high and medium high was all correct predicted with one exception. However, only roughly a third of medium low was correctly predicted, where one other third was misspredicted as low and one as medium high, this is what we expected from the figure above. Also One third of "low" was misspredicted as medium low.
+
+### 7. Data Distances
+
+Let's reload the dataset and calculate distances between the variables and then run the k-means algorithm
+```{r}
+# load MASS and Boston
+library(MASS)
+data('Boston')
+
+boston_scaled <- scale(Boston)
+boston_scaled <- as.data.frame(boston_scaled)
+# euclidean distance matrix
+dist_eu <- dist(boston_scaled)
+
+# k-means clustering
+km <-kmeans(boston_scaled, centers = 3)
+
+# plot the Boston dataset with clusters
+pairs(boston_scaled[6:10], col = km$cluster)
+```
+
+With 3 clusters we get some distinction of the datapoints, however, the graph makes clear that it could be separated more and better. Therefore, we observe the total of within cluster sum of squares (WCSS). When this measure is lowest we fidn the optimal number of clusters.
+
+```{r}
+set.seed(123)
+
+# determine the number of clusters
+k_max <- 10
+
+# calculate the total within sum of squares
+twcss <- sapply(1:k_max, function(k){kmeans(boston_scaled, k)$tot.withinss})
+
+# visualize the results
+qplot(x = 1:k_max, y = twcss, geom = 'line')
+```
+The graph suggests that we may find a better results with 10 clusters. However, that may be a overfit, so we take 8 instead as there is a rapid decline in the curve right before 8 clusters.
+
+```{r}
+# k-means clustering
+km <-kmeans(boston_scaled, centers = 8)
+
+# plot the Boston dataset with clusters
+pairs(boston_scaled[6:10], col = km$cluster)
+```
+Visually the result got worse, because it is way more difficult to achieve any interpretation of the result. With 8 clusters therer is already some overfit. Nevertheless, the brightblue cluster seems to be well described.
