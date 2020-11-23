@@ -38,17 +38,33 @@ I just can repeat what was said in the previous task: We see that female labor a
 
 ### 5. Multiple Correspondence Analysis
 ```{r}
+library(FactoMineR)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+data("tea")
+# column names to keep in the dataset
+keep_columns <- c("Tea", "How", "how", "sugar", "where", "lunch")
 
+# select the 'keep_columns' to create a new dataset
+tea_time <- dplyr::select(tea, one_of(keep_columns))
+
+# look at the summaries and structure of the data
+summary(tea_time)
+str(tea_time)
+# visualize the dataset
+gather(tea_time) %>% ggplot(aes(value)) + facet_wrap("key", scales = "free") + geom_bar() + theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 8))
 ```
-
+The dataset includes data about the tea drinking habits of 300 people. The habits are the tea sort, how it is drunk, how it is served, where it is bought and if it is drank for lunch. 
+Let's do a multiple correspondence analysis:
 ```{r}
+# multiple correspondence analysis
+mca <- MCA(tea_time, graph = FALSE)
 
+# summary of the model
+summary(mca)
+
+# visualize MCA
+plot(mca, invisible=c("ind"), habillage = "quali")
 ```
-
-```{r}
-
-```
-
-```{r}
-
-```
+The MCA shows that unpackaged tea is most likely purchased in a tea shop, whereas tea in tea bgas is bought in chain stores. Also interesting is that Earl Grey tea is the most likely tea to be had with milk, whereas green tea is consumed alone and black tea rather with lemon than the others.
