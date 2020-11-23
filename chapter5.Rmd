@@ -1,0 +1,54 @@
+# 5. Principal Component Analysis
+
+### 1. Graphical overviews and summaries
+```{r}
+library(GGally)
+humans <- read.csv("https://s3.amazonaws.com/assets.datacamp.com/production/course_2218/datasets/human2.txt", row.names = 1, header= TRUE)
+summary(humans)
+ggpairs(humans)
+```
+The summary shows us that we have a variety of ranges for our data. GNI and Mat.Mor are widely spread ranging over three orders of magnitude. The other variables are more compact. The plot shows us that we have fairly strong correlations across the board. So does Ado.Birth correlate strongly with maternal mortality, life expectancy as well as education. However, e.g. female labour shows weak to none correlation.
+
+### 2. PCA on **NON** standardized data
+```{r}
+# perform principal component analysis (with the SVD method)
+pca_human <- prcomp(humans)
+
+# draw a biplot of the principal component representation and the original variables
+biplot(pca_human, choices = 1:2, cex = c(0.6, 1), col = c("grey40", "deeppink2"))
+```
+
+
+### 3. PCA on **standardized** data
+```{r}
+# standardize the variables
+human_std <- scale(humans)
+# perform principal component analysis (with the SVD method)
+pca_human <- prcomp(human_std)
+
+# draw a biplot of the principal component representation and the original variables
+biplot(pca_human, choices = 1:2, cex = c(0.6, 1), col = c("grey40", "deeppink2")) + title("The result is very different as it is standardized. We see that female labor and female parliament representation strongly correlate, but are independent of all the other variables. All other variables either correlate or negatively correlate with each other. Therefore PCA1 basically describes these first two variables and PCA2 all the others", line = -20, cex = 0.5)
+```
+"As we see, we see nothing" in the **non** standaridzed PCA: GNI's variance and magnitude is so large that all the other variables become irrelevant in the PCA. The PCA is meaningless.In the standardized PCA though we get the variances clearly separated.
+As for some reason my caption keeps being cut: "The result is very different as it is standardized. We see that female labor and female parliament representation strongly correlate, but are independent of all the other variables. All other variables either correlate or negatively correlate with each other. Therefore PCA1 basically describes these first two variables and PCA2 all the others"
+
+### 4. Interpretation on PCA
+
+I just can repeat what was said in the previous task: We see that female labor and female parliament representation strongly correlate, but are independent of all the other variables. All other variables either correlate or negatively correlate with each other. Therefore PCA1 basically deals with gender data, whereas PCA2 describes general life variables that are gender independent.
+
+### 5. Multiple Correspondence Analysis
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
