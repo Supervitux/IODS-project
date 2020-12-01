@@ -53,7 +53,36 @@ p3 <- p2 + theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.min
 p4 <- p3 + scale_x_discrete(name = "Time (days)")
 p4
 ```
+The rows of boxplots show that all groups contain outliers, or in this case one rat is an outlier for each groups. Nevertheless, it once more confirms earlier suspicions and so does the following even simpler graph:
 
+```{r}
+# Make a summary data of the post treatment weeks (1-8)
+RATS8S <- RATS %>% filter(Time > 0) %>% group_by(Group, ID) %>% summarise( mean=mean(Weight) ) %>% ungroup()
+glimpse(RATS8S)
+p1 <- ggplot(RATS8S, aes(x = Group, y = mean))
+p2 <- p1 + geom_boxplot()
+p3 <- p2 + theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+p4 <- p3 + stat_summary(fun.y = "mean", geom = "point", shape=23, size=4, fill = "white")
+p5 <- p4 + scale_y_continuous(name = "mean(bprs), weeks 1-8")
+p5
+```
+So lets see what happens if we remove these outliers:
+
+```{r}
+RATS8S1 <- RATS8S %>% filter( (mean > 240 & Group == 1) | (mean < 480 & Group == 2) | (mean > 500 & Group == 3) )
+glimpse(RATS8S1)
+p1 <- ggplot(RATS8S1, aes(x = Group, y = mean))
+p2 <- p1 + geom_boxplot()
+p3 <- p2 + theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+p4 <- p3 + stat_summary(fun = "mean", geom = "point", shape=23, size=4, fill = "white")
+p5 <- p4 + scale_y_continuous(name = "mean(Weight)")
+p5
+```
+After removal of the outliers it becomes obvious that all the variance in Group 2 was basically caused by this one outlier. With a precise 
+
+```{r}
+t.test(mean ~ Group, data = RATS8S1, var.equal = TRUE)
+```
 
 ### 2. PCA on **NON** standardized data
 
