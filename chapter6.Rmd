@@ -28,7 +28,7 @@ p6
 A visual assessment of the graphs shows, that rats in group 1 with weight < 300 did not change their weight dramatically, there is possibly a slight decrease. However, individuals with higher weight in the beginning of the study, especially in group 2 seemed to have increased their weight over time.
 In order to make a general assessment of weight changes we will summarize the rats according to their group.
 
-## Summarize Groups
+### b) Summarize Groups
 ```{r}
 n <- RATS$Weight %>% unique() %>% length()
 
@@ -78,6 +78,8 @@ p4 <- p3 + stat_summary(fun = "mean", geom = "point", shape=23, size=4, fill = "
 p5 <- p4 + scale_y_continuous(name = "mean(Weight)")
 p5
 ```
+### c) Make a fit
+
 After removal of the outliers it becomes obvious that all the variance in Group 2 was basically caused by this one outlier. With a precise summary of our data at hand we can go ahead and see if we can fit a model onto it:
 
 
@@ -95,3 +97,104 @@ summary(fit)
 anova(fit)
 ```
 E voilá, **finally** we have a model with very good significance!
+
+## 2. BPRS data
+
+### a) Read in data:
+```{r}
+BPRS <- read.csv("data/bprs.csv", row.names = 1, header= TRUE)
+BPRS <- within(BPRS, {
+       subject <- factor(subject)
+    treatment <- factor(treatment)
+})
+str(BPRS)
+```
+This data is a psychological study, in which 40 male subjects were randomly assigned to one of two treatment groups and each subject was rated on the brief psychiatric rating scale (BPRS) measured before treatment began (week 0) and then at weekly intervals for eight weeks. After transformation in the "Data wrangling" it has the form of a data frame with 360 obs of 7 variables, which are treatment, subject, weeks, bprs and group.
+
+### b) Visualize data
+
+Let's make some graphs to better understand the data!
+
+```{r}
+p1 <- ggplot(BPRS, aes(x = week, y = bprs, group = treatment))
+p2 <- p1 + geom_text(aes(label = treatment))
+p3 <- p2 + scale_x_continuous(name = "Week", breaks = seq(0, 60, 10))
+p4 <- p3 + scale_y_continuous(name = "BPRS score")
+p5 <- p4 + theme_bw()
+p6 <- p5 + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+p6
+```
+Through this interesting plot we can see that subjects in the treatment group 2 tend to at least occupy the maxima in bprs score throughout the study. However, it is really hard to say something about the middle and low end. Before we improve the visualizations let's quickly do a linear regression to see, if that can be improved as well:
+
+```{r}
+BPRS_reg <- lm(bprs ~ week + treatment, data = BPRS)
+summary(BPRS_reg)
+```
+We immediately see that there is lots of space for improvement as "treatment" is not significant at all! 
+Let's try some visualizations:
+
+```{r}
+p2 <- ggplot(BPRS, aes(x = week, y = bprs, linetype = treatment)) + geom_line()
+p3 <- p2 + scale_x_continuous(name = "Week", breaks = seq(0, 60, 10))
+p4 <- p3 + scale_y_continuous(name = "BPRS")
+p5 <- p4 + theme_bw() + theme(legend.position = "top")
+p6 <- p5 + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+p6
+```
+This graph is simply useless. Another try is the pairs plot
+
+```{r}
+BPRS_raw <- read.csv("https://raw.githubusercontent.com/KimmoVehkalahti/MABS/master/Examples/data/BPRS.txt", stringsAsFactors = F, sep = " ")
+
+pairs <- pairs(BPRS_raw[, 3:11], cex = 0.7)
+
+```
+This plot show how the BPRS evolved through time and we see that it overall decrease from week 0 to week 8.
+
+### b) Mixed Effect Models
+
+As seen earlier a simple linear model does not perform well on our data. An better option is to use a Random Intercept Model because it enables independent intercepts for each subject in our data:
+
+```{r}
+library("lme4")
+BPRS_ref <- lmer(bprs ~ week + treatment + (1 | subject), data = BPRS, REML = FALSE)
+summary(BPRS_ref)
+
+```
+Alternatively we can have the model also differ for each subject in slope!
+```{r, echo=TRUE}
+BPRS_ref1 <- lmer(bprs ~ week + treatment + (week | subject), data = BPRS, REML = FALSE)
+summary(BPRS_ref1)
+anova(BPRS_ref1, BPRS_ref)
+```
+Anova shows us that we already reached some significance with a P value less that 0.03, but that can possibly still be improved by considering the interaction of the week with the treatment:
+```{r, echo=TRUE}
+BPRS_ref2 <- lmer(bprs ~ week * treatment + (week | subject), data = BPRS, REML = FALSE)
+summary(BPRS_ref2)
+anova(BPRS_ref2, BPRS_ref1)
+```
+Interestingly enough the interaction made the model worse. That means the the correlation of these variables is very week and should not be considered. Therefore, lets produce some plots based on the previous models.
+
+```{r}
+Fitted <- fitted(BPRS_ref1)
+BPRS <- BPRS %>% mutate(Fitted)
+
+p1 <- ggplot(BPRS, aes(x = week, y = bprs, linetype = subject))
+p2 <- p1 + geom_line() + scale_linetype_manual(values = rep(1:10, times=4))
+p3 <- p2 + facet_grid(. ~ treatment, labeller = label_both)
+p4 <- p3 + theme_bw() + theme(legend.position = "none")
+p5 <- p4 + theme(panel.grid.minor.y = element_blank())
+p6 <- p5 + scale_y_continuous(limits = c(min(BPRS$bprs), max(BPRS$bprs)))
+graph1 <- p6
+
+p1 <- ggplot(BPRS, aes(x = week, y = Fitted, linetype = subject))
+p2 <- p1 + geom_line() + scale_linetype_manual(values = rep(1:10, times=4))
+p3 <- p2 + facet_grid(. ~ treatment, labeller = label_both)
+p4 <- p3 + theme_bw() + theme(legend.position = "none")
+p5 <- p4 + theme(panel.grid.minor.y = element_blank())
+p6 <- p5 + scale_y_continuous(limits = c(min(BPRS$bprs), max(BPRS$bprs)))
+graph2 <- p6
+
+graph1; graph2
+```
+We were able to make the best fits possible! I hope I will be forgiven that I was not able to plot it in single plots, because the almighty stackoverflow was not able to save me this time :( .
