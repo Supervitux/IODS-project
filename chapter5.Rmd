@@ -27,7 +27,7 @@ human_std <- scale(humans)
 pca_human <- prcomp(human_std)
 
 # draw a biplot of the principal component representation and the original variables
-biplot(pca_human, choices = 1:2, cex = c(0.6, 1), col = c("grey40", "deeppink2")) + title("The result is very different as it is standardized. We see that female labor and female parliament representation strongly correlate, but are independent of all the other variables. All other variables either correlate or negatively correlate with each other. Therefore PCA1 basically describes these first two variables and PCA2 all the others", line = -20, cex = 0.5)
+biplot(pca_human, choices = 1:2, cex = c(0.6, 1), col = c("grey40", "deeppink2")) + title("The result is very different as it is standardized. We see that female labor and female parliament representation strongly correlate, but are independent of all the other variables. All other variables either correlate or negatively correlate with each other. Therefore PCA1 basically describes these first two variables and PCA2 all the others", line = -20)
 ```
 "As we see, we see nothing" in the **non** standaridzed PCA: GNI's variance and magnitude is so large that all the other variables become irrelevant in the PCA. The PCA is meaningless.In the standardized PCA though we get the variances clearly separated.
 As for some reason my caption keeps being cut: "The result is very different as it is standardized. We see that female labor and female parliament representation strongly correlate, but are independent of all the other variables. All other variables either correlate or negatively correlate with each other. Therefore PCA1 basically describes these first two variables and PCA2 all the others"
