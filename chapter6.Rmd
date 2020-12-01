@@ -1,0 +1,119 @@
+# 6. Analysis of longitudinal data
+
+## 1. RATS data
+
+### a) Read in data:
+```{r}
+library(tidyr)
+library(dplyr)
+library(ggplot2)
+RATS <- read.csv("data/rats.csv", row.names = 1, header= TRUE)
+RATS$ID <- factor(RATS$ID)
+RATS$Group <- factor(RATS$Group)
+summary(RATS)
+str(RATS)
+```
+This is data from a nutrition study conducted on three groups of rats. The groups were put on different diets, and each animal’s body weight (grams) was recorded repeatedly (approximately) weekly, except in week seven when two recordings were taken) over a 9-week period
+. Let's create a graphical representation to understand the data better:
+
+```{r}
+p1 <- ggplot(RATS, aes(x = Time, y = Weight, linetype = ID))
+p2 <- p1 + geom_line() + scale_linetype_manual(values = rep(1:10, times=4))
+p3 <- p2 + facet_grid(. ~ Group, labeller = label_both)
+p4 <- p3 + theme_bw() + theme(legend.position = "none")
+p5 <- p4 + theme(panel.grid.minor.y = element_blank())
+p6 <- p5 + scale_y_continuous(limits = c(min(RATS$Weight),max(RATS$Weight)))
+p6
+```
+A visual assessment of the graphs shows, that rats in group 1 with weight < 300 did not change their weight dramatically, there is possibly a slight decrease. However, individuals with higher weight in the beginning of the study, especially in group 2 seemed to have increased their weight over time.
+In order to make a general assessment of weight changes we will summarize the rats according to their group.
+
+## Summarize Groups
+```{r}
+n <- RATS$Weight %>% unique() %>% length()
+
+RATSS <- RATS %>% group_by(Group, Time) %>% summarise( mean=mean(Weight), se=sd(Weight)/sqrt(n)) %>% ungroup()
+glimpse(RATSS)
+
+p1 <- ggplot(RATSS, aes(x = Time, y = mean, linetype = Group, shape = Group))
+p2 <- p1 + geom_line() + scale_linetype_manual(values = rep(1:10, times=4))
+p3 <- p2 + geom_point(size=1) + scale_shape_manual(values = rep(1:10, times=4))
+p4 <- p3 + geom_errorbar(aes(ymin=mean-se, ymax=mean+se, linetype="1"), width=0.3)
+p5 <- p4 + theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+p6 <- p5 + scale_y_continuous(name = "mean(Weight) +/- se(Weight)")
+p6
+```
+The graphical summary of the data shows that within the groups the weight varies only by little. Overtime, group 1 has almost no increase, while group 2 and 3 increase more significantly. Group 2 varies the most, in fact it is the only data for which the errorbars are easy to spot by eye.
+Step by step we can condense the data further into more concise graphs:
+
+```{r}
+p1 <- ggplot(RATS, aes(x = factor(Time), y = Weight, fill = Group))
+p2 <- p1 + geom_boxplot(position = position_dodge(width = 0.9))
+p3 <- p2 + theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+p4 <- p3 + scale_x_discrete(name = "Time (days)")
+p4
+```
+
+
+### 2. PCA on **NON** standardized data
+
+# data from a nutrition study conducted in three groups of rats. The groups were put on different diets, and each animal’s body weight (grams) was recorded repeatedly (approximately) weekly, except in week seven when two recordings were taken) over a 9-week period
+
+```{r}
+# perform principal component analysis (with the SVD method)
+pca_human <- prcomp(humans)
+
+# draw a biplot of the principal component representation and the original variables
+biplot(pca_human, choices = 1:2, cex = c(0.6, 1), col = c("grey40", "deeppink2"))
+```
+
+
+### 3. PCA on **standardized** data
+```{r}
+# standardize the variables
+human_std <- scale(humans)
+# perform principal component analysis (with the SVD method)
+pca_human <- prcomp(human_std)
+
+# draw a biplot of the principal component representation and the original variables
+biplot(pca_human, choices = 1:2, cex = c(0.6, 1), col = c("grey40", "deeppink2")) + title("The result is very different as it is standardized. We see that female labor and female parliament representation strongly correlate, but are independent of all the other variables. All other variables either correlate or negatively correlate with each other. Therefore PCA1 basically describes these first two variables and PCA2 all the others", line = -20)
+```
+"As we see, we see nothing" in the **non** standaridzed PCA: GNI's variance and magnitude is so large that all the other variables become irrelevant in the PCA. The PCA is meaningless.In the standardized PCA though we get the variances clearly separated.
+As for some reason my caption keeps being cut: "The result is very different as it is standardized. We see that female labor and female parliament representation strongly correlate, but are independent of all the other variables. All other variables either correlate or negatively correlate with each other. Therefore PCA1 basically describes these first two variables and PCA2 all the others"
+
+### 4. Interpretation on PCA
+
+I just can repeat what was said in the previous task: We see that female labor and female parliament representation strongly correlate, but are independent of all the other variables. All other variables either correlate or negatively correlate with each other. Therefore PCA1 basically deals with gender data, whereas PCA2 describes general life variables that are gender independent.
+
+### 5. Multiple Correspondence Analysis
+```{r}
+library(FactoMineR)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+data("tea")
+# column names to keep in the dataset
+keep_columns <- c("Tea", "How", "how", "sugar", "where", "lunch")
+
+# select the 'keep_columns' to create a new dataset
+tea_time <- dplyr::select(tea, one_of(keep_columns))
+
+# look at the summaries and structure of the data
+summary(tea_time)
+str(tea_time)
+# visualize the dataset
+gather(tea_time) %>% ggplot(aes(value)) + facet_wrap("key", scales = "free") + geom_bar() + theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 8))
+```
+The dataset includes data about the tea drinking habits of 300 people. The habits are the tea sort, how it is drunk, how it is served, where it is bought and if it is drank for lunch. 
+Let's do a multiple correspondence analysis:
+```{r}
+# multiple correspondence analysis
+mca <- MCA(tea_time, graph = FALSE)
+
+# summary of the model
+summary(mca)
+
+# visualize MCA
+plot(mca, invisible=c("ind"), habillage = "quali")
+```
+The MCA shows that unpackaged tea is most likely purchased in a tea shop, whereas tea in tea bgas is bought in chain stores. Also interesting is that Earl Grey tea is the most likely tea to be had with milk, whereas green tea is consumed alone and black tea rather with lemon than the others.
